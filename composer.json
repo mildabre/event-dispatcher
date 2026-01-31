@@ -1,0 +1,22 @@
+{
+  "name": "mildabre/event-dispatcher",
+  "description": "Simple event dispatcher for Nette based applications.",
+  "keywords": ["nette", "event", "dispatcher", "event dispatcher", "event listener"],
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Miloš Brecher"
+    }
+  ],
+  "require": {
+    "php": ">=8.3",
+    "nette/di": "^3.1",
+    "nette/schema": "^1.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "Mildabre\\EventDispatcher\\": "src/"
+    }
+  }
+}
