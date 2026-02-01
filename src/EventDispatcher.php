@@ -4,24 +4,42 @@ declare(strict_types=1);
 
 namespace Mildabre\EventDispatcher;
 
+use Nette\InvalidArgumentException;
+use ReflectionClass;
+use ReflectionNamedType;
+
 class EventDispatcher
 {
     /**
-     * @var list<DomainEventListener>
+     * @var array<string, list<object>>
      */
     private array $listeners = [];
 
-    public function addListener(DomainEventListener $listener): void
+    public function addListener(object $listener): void
     {
-        $this->listeners[] = $listener;
+        $rc = new ReflectionClass($listener);
+        if (!$rc->hasMethod('handle')) {
+            throw new InvalidArgumentException("$rc->name must implement method handle().");
+        }
+
+        $method = $rc->getMethod('handle');
+        $parameters = $method->getParameters();
+        $parameter = $parameters[0] ?? null;
+        $type = $parameter?->getType();
+
+        if (count($parameters) !== 1 || !$type instanceof ReflectionNamedType || $type->isBuiltin()) {
+            throw new InvalidArgumentException("$rc->name, method handle must have exactly one parameter of class type.");
+        }
+
+        $eventClass = $type->getName();
+        $this->listeners[$eventClass][] = $listener;
     }
 
     public function dispatch(object $event): void
     {
-        foreach ($this->listeners as $listener) {
-            if ($listener->supports($event)) {
-                $listener->handle($event);
-            }
+        $listeners = $this->listeners[$event::class] ?? [];
+        foreach ($listeners as $listener) {
+            $listener->handle($event);
         }
     }
 }
