@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Mildabre\EventDispatcher;
 
-use Nette\InvalidArgumentException;
+use InvalidArgumentException;
 use ReflectionClass;
 use ReflectionNamedType;
 
