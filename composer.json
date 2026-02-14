@@ -11,6 +11,7 @@
   ],
   "require": {
     "php": ">=8.3",
+    "mildabre/service-discovery": "dev-main",
     "nette/di": "^3.1",
     "nette/schema": "^1.2"
   },
