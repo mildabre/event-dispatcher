@@ -4,49 +4,43 @@ declare(strict_types=1);
 
 namespace Mildabre\EventDispatcher;
 
-use LogicException;
-use Mildabre\EventDispatcher\Attributes\Event;
-use ReflectionClass;
-use ReflectionNamedType;
+use RuntimeException;
+use Throwable;
 
 class EventDispatcher
 {
     /**
-     * @var array<string, list<object>>
+     * @var array<string, list<array{accessor: ListenerProxy, class: class-string}>>
      */
     private array $listeners = [];
 
-    public function addListener(object $listener): void
+    /**
+     * @internal
+     */
+    public function addListener(ListenerProxy $proxy, string $eventClass, string $listenerClass): void
     {
-        $rc = new ReflectionClass($listener);
-
-        if (!$rc->hasMethod('handle')) {
-            throw new LogicException("$rc->name must implement method handle().");
-        }
-
-        $method = $rc->getMethod('handle');
-        $parameters = $method->getParameters();
-        $parameter = $parameters[0] ?? null;
-        $type = $parameter?->getType();
-
-        if (count($parameters) !== 1 || !$type instanceof ReflectionNamedType || $type->isBuiltin()) {
-            throw new LogicException(sprintf("%d, method handle must have exactly one parameter of class type.", $rc->name));
-        }
-
-        $eventClass = $type->getName();
-        $this->listeners[$eventClass][] = $listener;
+        $this->listeners[$eventClass][] = ['proxy' => $proxy, 'class' => $listenerClass];
     }
 
     public function dispatch(object $event): void
     {
-        $rc = new ReflectionClass($event);
-        if (!$rc->getAttributes(Event::class)) {
-            throw new LogicException(sprintf("Event class %s must be annotated with attribute '#[Event]'.", $event::class));
+        $listeners = $this->listeners[$event::class] ?? [];
+
+        if (!$listeners) {
+            return;
         }
 
-        $listeners = $this->listeners[$event::class] ?? [];
-        foreach ($listeners as $listener) {
-            $listener->handle($event);
+        foreach ($listeners as $listenerData) {
+            try {
+                $listener = $listenerData['proxy']->get();
+                $listener->handle($event);
+
+            } catch (Throwable $exception) {
+                throw new RuntimeException(
+                    sprintf("Listener '%s' failed handling event '%s': %s", $listenerData['class'], $event::class, $exception->getMessage()),
+                    previous: $exception
+                );
+            }
         }
     }
 }
