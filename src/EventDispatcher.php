@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Mildabre\EventDispatcher;
 
-use InvalidArgumentException;
+use LogicException;
+use Mildabre\EventDispatcher\Attributes\Event;
 use ReflectionClass;
 use ReflectionNamedType;
 
@@ -38,6 +39,11 @@ class EventDispatcher
 
     public function dispatch(object $event): void
     {
+        $rc = new ReflectionClass($event);
+        if (!$rc->getAttributes(Event::class)) {
+            throw new LogicException(sprintf("Event class %s must be annotated with attribute '#[Event]'.", $event::class));
+        }
+
         $listeners = $this->listeners[$event::class] ?? [];
         foreach ($listeners as $listener) {
             $listener->handle($event);
