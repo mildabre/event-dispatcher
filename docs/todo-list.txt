@@ -1,0 +1,9 @@
+- listener priority
+
+- stop propagation
+
+- asynchronous listener - db + cron ??
+
+- transactions - before/after db commit
+
+- listeners lazy loading
