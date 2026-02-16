@@ -9,10 +9,9 @@ Simple, fresh, and modern event dispatcher with attribute-based event listener r
 
 - **Attribute-based registration** - Use PHP 8 attributes to mark events and listeners
 -  **Simple API** - Minimal configuration, maximum productivity
--  **Modern PHP** - Requires PHP 8.3+ with full type safety
 -  **Nette DI integration** - Seamless integration with Nette Dependency Injection
 -  **Lightweight** - No bloat, just what you need
--  **Auto-discovery** - Automatic listener registration via service discovery
+-  **Event Listener Discovery** - Automatic listener registration via service discovery
 
 ## Installation
 
