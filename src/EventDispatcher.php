@@ -18,8 +18,9 @@ class EventDispatcher
     public function addListener(object $listener): void
     {
         $rc = new ReflectionClass($listener);
+
         if (!$rc->hasMethod('handle')) {
-            throw new InvalidArgumentException("$rc->name must implement method handle().");
+            throw new LogicException("$rc->name must implement method handle().");
         }
 
         $method = $rc->getMethod('handle');
@@ -28,7 +29,7 @@ class EventDispatcher
         $type = $parameter?->getType();
 
         if (count($parameters) !== 1 || !$type instanceof ReflectionNamedType || $type->isBuiltin()) {
-            throw new InvalidArgumentException("$rc->name, method handle must have exactly one parameter of class type.");
+            throw new LogicException(sprintf("%d, method handle must have exactly one parameter of class type.", $rc->name));
         }
 
         $eventClass = $type->getName();
