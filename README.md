@@ -11,7 +11,7 @@ Simple, fresh, and modern event dispatcher with attribute-based event listener r
 -  **Simple API** - Minimal configuration, maximum productivity
 -  **Nette DI integration** - Seamless integration with Nette Dependency Injection
 -  **Lightweight** - No bloat, just what you need
--  **Event Listener Discovery** - Automatic listener registration via service discovery
+-  **Event Listener Discovery** - Automatic listener registration
 
 ## Installation
 
