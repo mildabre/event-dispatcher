@@ -1,0 +1,137 @@
+Listeners lazy loading - draft
+==============================
+
+Define listener as factory - lazy
+--------------------------------
+
+$def = $builder->addDefinition($name)
+    ->setFactory($class)
+    ->addTag(TagEventListener);
+
+Accessor interface
+------------------
+
+interface EventListenerAccessor
+{
+    public function get(): EventListenerInterface;
+}
+
+
+In extension
+------------
+
+$dispatcher->addSetup('addListener', [
+    $builder->getDefinition($name)->getAccessor()
+]);
+
+
+In dispatcher
+-------------
+
+public function addListener(EventListenerAccessor $accessor): void
+{
+    $this->listeners[] = $accessor;
+}
+
+public function dispatch(object $event): void
+{
+    foreach ($this->listeners as $accessor) {
+        $listener = $accessor->get(); // lazy instantiation here
+        $listener->process($event);
+    }
+}
+
+Notice: Accessor interface is one universal - for all listeners
+
+
+
+Listener implements
+-------------------
+
+interface EventListenerInterface
+{
+    public function __invoke(object $event): void;
+}
+
+
+How it works
+============
+
+Listener
+--------
+
+class SendWelcomeEmail implements EventListenerInterface
+{
+    public function __invoke(UserRegistered $event): void
+    {
+        // ...
+    }
+}
+
+Accessor
+--------
+
+interface EventListenerAccessor
+{
+    public function get(): EventListenerInterface;
+}
+
+Extension
+---------
+
+$def = $builder->addDefinition($name)
+    ->setFactory($class) // lazy!
+    ->addTag(TagEventListener);
+
+$dispatcher->addSetup('addListener', [
+    $def->getAccessor() // Nette DI vygeneruje proxy
+]);
+
+
+Dispatcher
+----------
+
+public function addListener(EventListenerAccessor $accessor): void
+{
+    $this->listeners[] = $accessor;
+}
+
+public function dispatch(object $event): void
+{
+    foreach ($this->listeners as $accessor) {
+        $listener = $accessor->get(); // lazy instantiation
+        $listener($event);
+    }
+}
+
+
+Tip: in EventDispatcherExtension create lazy proxy in beforeCompile():
+======================================================================
+
+- listener definujeme jako lazy factory (setFactory() místo setType())
+- dispatcher dostane accessor proxy, ne listener
+
+public function beforeCompile(): void
+{
+    if (!$this->config->enabled) {
+        return;
+    }
+
+    $builder = $this->getContainerBuilder();
+    $dispatcher = $builder->getDefinition($this->prefix('dispatcher'));
+
+    $listeners = array_filter(
+        $builder->getDefinitions(),
+        fn(Definition $def) => (bool) $def->getTag(ServiceDiscoveryExtension::TagEventListener)
+    );
+
+    foreach ($listeners as $listenerDef) {
+
+        if ($listenerDef->getFactory() === null) {              # Listener must be lazy - setFactory() -  if not set from service-discovery
+            $listenerDef->setFactory($listenerDef->getType());
+        }
+
+        $accessor = $listenerDef->getAccessor();                # create accessor proxy
+        $dispatcher->addSetup('addListener', [$accessor]);      # pass accessor to dispatche
+    }
+}
