@@ -38,9 +38,7 @@ events:
     enabled: false       # default: true
 ```
 
-## Usage
-
-### Define an Event
+## Define an Event
 
 Create an event as value object (final readonly class) with class and mark it with the `#[Event]` attribute. 
 
@@ -59,7 +57,7 @@ final readonly class UserRegistered
 }
 ```
 
-### Create an Event Listener
+## Create an Event Listener
 
 Create a listener class with a `handle()` method that accepts your event:
 
@@ -82,7 +80,7 @@ class SendWelcomeEmail
 }
 ```
 
-### Dispatch Events
+## Dispatch Events
 
 Inject the `EventDispatcher` and dispatch your events:
 
@@ -115,9 +113,28 @@ class UserService
 3. **Listener Methods** must be named `handle()` and accept exactly one parameter of the event class type
 4. **Auto-registration** happens automatically via Nette DI - listeners are discovered and registered at compile time
 
+##  Architecture
+
+The event dispatcher follows a simple but powerful architecture:
+
+```
+Event → EventDispatcher → Listeners
+  ↓            ↓              ↓
+#[Event]   Auto-wired   #[EventListener]
+              via           with handle()
+           Nette DI           method
+```
+
 ## Requirements
 
 - PHP >= 8.1
 - nette/di ^3.1
 - nette/schema ^1.2
 - mildabre/service-discovery ^0.1
+
+
+## License
+
+This project is licensed under the MIT License.
+
+
