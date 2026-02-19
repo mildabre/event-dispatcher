@@ -10,16 +10,16 @@ use Throwable;
 class EventDispatcher
 {
     /**
-     * @var array<string, list<array{accessor: ListenerProxy, class: class-string}>>
+     * @var array<string, list<array{object: object, class: class-string}>>
      */
     private array $listeners = [];
 
     /**
      * @internal
      */
-    public function addListener(ListenerProxy $proxy, string $eventClass, string $listenerClass): void
+    public function addListener(object $listenerOrProxy, string $eventClass, string $listenerClass): void
     {
-        $this->listeners[$eventClass][] = ['proxy' => $proxy, 'class' => $listenerClass];
+        $this->listeners[$eventClass][] = ['object' => $listenerOrProxy, 'class' => $listenerClass];
     }
 
     public function dispatch(object $event): void
@@ -32,7 +32,8 @@ class EventDispatcher
 
         foreach ($listeners as $listenerData) {
             try {
-                $listener = $listenerData['proxy']->get();
+                $object = $listenerData['object'];
+                $listener = $object instanceof ListenerProxy ? $object->get() :  $object;
                 $listener->handle($event);
 
             } catch (Throwable $exception) {
