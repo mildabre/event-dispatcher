@@ -110,9 +110,13 @@ class EventDispatcherExtension extends CompilerExtension
             throw new LogicException($class . ", listener event class '$eventClass' does not exist.");
         }
 
-        $eventRc = new ReflectionClass($eventClass);
-        if (!$eventRc->getAttributes(Event::class)) {
-            throw new LogicException($class . ", listener event class '$eventClass' must be annotated with #[Event] attribute.");
+        $eventReflection = new ReflectionClass($eventClass);
+        if (!$eventReflection->getAttributes(Event::class)) {
+            throw new LogicException($class . ", event class '$eventClass' must be annotated with #[Event] attribute.");
+        }
+
+        if (!$eventReflection->isFinal() || !$eventReflection->isReadOnly()) {
+            throw new LogicException($class . ", event class '$eventClass' must be declared as final readonly.");
         }
 
         return $eventClass;
