@@ -10,7 +10,7 @@
     }
   ],
   "require": {
-    "php": ">=8.1",
+    "php": ">=8.2",
     "nette/di": "^3.1",
     "nette/schema": "^1.2",
     "mildabre/service-discovery": "^0.1"
