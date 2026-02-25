@@ -45,6 +45,7 @@ class EventDispatcherExtension extends CompilerExtension
 
         $builder = $this->getContainerBuilder();
         $dispatcher = $builder->getDefinition($this->prefix('dispatcher'));
+        $useNativeLazy = PHP_VERSION_ID >= 80400;
 
         $listenerDefs = array_filter(
             $builder->getDefinitions(),
@@ -60,13 +61,17 @@ class EventDispatcherExtension extends CompilerExtension
 
             $eventClass = $this->validateAndExtractEventClass($listenerClass);
 
-            $proxyName = $this->prefix('proxy.' . $listenerName);
+            if ($useNativeLazy) {
+                $listenerDef->lazy = true;
+                $dispatcher->addSetup('addListener', ['@' . $listenerName, $eventClass, $listenerClass]);
 
-            $builder->addDefinition($proxyName)
-                ->setType(ListenerProxy::class)
-                ->setArguments(['serviceName' => $listenerName]);
-
-            $dispatcher->addSetup('addListener', ['@' . $proxyName, $eventClass, $listenerClass]);
+            } else {
+                $proxyName = $this->prefix('proxy.' . $listenerName);
+                $builder->addDefinition($proxyName)
+                    ->setType(ListenerProxy::class)
+                    ->setArguments(['serviceName' => $listenerName]);
+                $dispatcher->addSetup('addListenerProxy', ['@' . $proxyName, $eventClass, $listenerClass]);
+            }
         }
     }
 
