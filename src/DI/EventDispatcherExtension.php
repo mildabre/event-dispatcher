@@ -16,6 +16,7 @@ use Nette\Schema\Expect;
 use Nette\Schema\Schema;
 use ReflectionClass;
 use ReflectionNamedType;
+use RuntimeException;
 
 class EventDispatcherExtension extends CompilerExtension
 {
@@ -41,6 +42,17 @@ class EventDispatcherExtension extends CompilerExtension
     {
         if (!$this->config->enabled) {
             return;
+        }
+
+        $sdeExtensions = $this->compiler->getExtensions(ServiceDiscoveryExtension::class);
+        if (!$sdeExtensions) {
+            throw new RuntimeException('ServiceDiscoveryExtension not registered, add it to your .neon file - before EventDispatcherExtension registration.');
+        }
+
+        $extensions = array_keys($this->compiler->getExtensions());
+        $sdeKey = array_key_first($sdeExtensions);
+        if (array_search($sdeKey, $extensions) > array_search($this->name, $extensions)) {
+            throw new LogicException('ServiceDiscoveryExtension must be registered before EventDispatcherExtension.');
         }
 
         $builder = $this->getContainerBuilder();
